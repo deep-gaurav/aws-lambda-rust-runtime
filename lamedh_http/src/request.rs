@@ -42,7 +42,7 @@ pub struct FixReq{
     #[serde(with = "http_serde::header_map")]
     headers:HeaderMap<HeaderValue>,
     
-    encoding:String,
+    encoding:Option<String>,
     body:Option<String>
 }
 
@@ -253,7 +253,7 @@ impl<'a> From<LambdaRequest> for http::Request<Body> {
                 //     }
                 // }
             
-                let base64 = fixreq.encoding.contains("base64");
+                let base64 = fixreq.encoding.unwrap_or_default().contains("base64");
             
                 let mut req = builder
                     .body(
