@@ -229,10 +229,10 @@ where
             Err(err) => {
                 eprintln!("{:#?}",err);
                 let b = serde_json::from_slice::<serde_json::Value>(&body_reader)?;
-                println!("val {:#?}",b);
+                println!("valtoparse {:#?}",b);
                 if let Some(val)= b.get("body"){
                     let val = val.as_str().ok_or("body not present")?;
-                    eprintln!("parsing {}",val);
+                    println!("parsing {}",val);
                     serde_json::from_str(val)?
                     
                 }else{
