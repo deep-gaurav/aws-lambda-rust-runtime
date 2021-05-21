@@ -232,7 +232,9 @@ where
                 println!("val {:#?}",b);
                 if let Some(val)= b.get("body"){
                     let val = val.as_str().ok_or("body not present")?;
+                    eprintln!("parsing {}",val);
                     serde_json::from_str(val)?
+                    
                 }else{
                     return Err("".into());
                 }

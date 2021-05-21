@@ -39,10 +39,12 @@ pub struct FixReq{
     method:Method,
     // host:String,
     path:Option<String>,
-    #[serde(with = "http_serde::header_map")]
+    #[serde(with = "http_serde::header_map",default)]
     headers:HeaderMap<HeaderValue>,
     
+    #[serde(default)]
     encoding:Option<String>,
+    #[serde(default)]
     body:Option<String>
 }
 
