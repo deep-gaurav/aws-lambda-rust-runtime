@@ -31,6 +31,7 @@ lamedh_attributes = { path = "../lambda-attributes", version = "0.3", optional =
 tracing = { version = "0.1", features = ["log"] }
 tracing-futures = "0.2"
 async-stream = "0.3"
+log="0.4"
 
 [dev-dependencies]
 tracing-subscriber = "0.2"
