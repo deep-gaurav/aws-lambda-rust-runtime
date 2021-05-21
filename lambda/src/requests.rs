@@ -72,9 +72,9 @@ where
     fn into_req(self) -> Result<Request<Body>, Error> {
         let uri = format!("/2018-06-01/runtime/invocation/{}/response", self.request_id);
         let uri = Uri::from_str(&uri)?;
-        log::debug!("request received");
+        println!("parsing request");
         let body = serde_json::to_vec(&self.body)?;
-        log::debug!("request parsed");
+        println!("parsing request done");
         let body = Body::from(body);
 
 

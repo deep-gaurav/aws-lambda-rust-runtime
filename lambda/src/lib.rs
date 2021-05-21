@@ -193,8 +193,10 @@ where
 fn incoming(client: &Client) -> impl Stream<Item = Result<http::Response<hyper::Body>, Error>> + '_ {
     async_stream::stream! {
         loop {
+            println!("Request next event");
             let req = NextEventRequest.into_req().expect("Unable to construct request");
             let res = client.call(req).await;
+            println!("{:#?}",res);
             yield res;
         }
     }
@@ -216,12 +218,27 @@ where
     while let Some(event) = incoming.next().await {
         let event = event?;
         let (parts, body) = event.into_parts();
-
+        println!("req received, parts {:#?} body {:#?}",parts,body);
         let mut ctx: Context = Context::try_from(parts.headers)?;
         ctx.env_config = Config::from_env()?;
-        let body = hyper::body::to_bytes(body).await?;
-        let body = serde_json::from_slice(&body)?;
-
+        let body_reader = hyper::body::to_bytes(body).await?;
+        println!("body {}",std::str::from_utf8(&body_reader.to_vec()[..]).unwrap_or_default());
+        let body = serde_json::from_slice(&body_reader);
+        let body = match body{
+            Ok(body) => {body}
+            Err(err) => {
+                eprintln!("{:#?}",err);
+                let b = serde_json::from_slice::<serde_json::Value>(&body_reader)?;
+                println!("val {:#?}",b);
+                if let Some(val)= b.get("body"){
+                    let val = val.as_str().ok_or("body not present")?;
+                    serde_json::from_str(val)?
+                }else{
+                    return Err("".into());
+                }
+            }
+        };
+        println!("body parsed");
         let request_id = &ctx.request_id.clone();
         let f = handler.call(body, ctx);
 

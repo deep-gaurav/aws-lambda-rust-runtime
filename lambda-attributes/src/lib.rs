@@ -91,7 +91,7 @@ pub fn lambda(attr: TokenStream, item: TokenStream) -> TokenStream {
                         async fn actual(#event_name: #event_type, #context_name: #context_type) #ret #body
 
                         let f = lamedh_http::handler(actual);
-                        lamedh_http::lambda::run(f).await.unwrap();
+                        lamedh_http::lambda::run(f).await.expect("lambda run panic");
                     }
                 }
             } else if is_http_invoke(&args) {
@@ -102,7 +102,7 @@ pub fn lambda(attr: TokenStream, item: TokenStream) -> TokenStream {
                         async fn actual(#event_name: #event_type, #context_name: #context_type) #ret #body
 
                         let f = lamedh_http::proxy_handler(actual);
-                        lamedh_http::lambda::run(f).await.unwrap();
+                        lamedh_http::lambda::run(f).await.expect("lambda run panic");
                     }
                 }
             } else {
@@ -113,7 +113,7 @@ pub fn lambda(attr: TokenStream, item: TokenStream) -> TokenStream {
                         async fn actual(#event_name: #event_type, #context_name: #context_type) #ret #body
 
                         let f = lamedh_runtime::handler_fn(actual);
-                        lamedh_runtime::run(f).await.unwrap();
+                        lamedh_runtime::run(f).await.expect("lambda run panic");
                     }
                 }
             }

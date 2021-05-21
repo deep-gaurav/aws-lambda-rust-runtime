@@ -12,7 +12,7 @@ use aws_lambda_events::event::alb::{AlbTargetGroupRequest, AlbTargetGroupRequest
 use aws_lambda_events::event::apigw::{
     ApiGatewayProxyRequest, ApiGatewayProxyRequestContext, ApiGatewayV2httpRequest, ApiGatewayV2httpRequestContext,
 };
-use http::header::HeaderName;
+use http::{HeaderMap, HeaderValue, Method, header::HeaderName};
 use serde::Deserialize;
 use serde_json::error::Error as JsonError;
 use std::{io::Read, mem};
@@ -29,7 +29,146 @@ pub enum LambdaRequest {
     ApiGatewayV1(ApiGatewayProxyRequest),
     ApiGatewayV2(ApiGatewayV2httpRequest),
     Alb(AlbTargetGroupRequest),
+    Unknown(FixReq),
 }
+/// FIx for vercel
+#[doc(hidden)]
+#[derive(Debug,Deserialize)]
+pub struct FixReq{
+    #[serde(with = "http_serde::method")]
+    method:Method,
+    // host:String,
+    path:Option<String>,
+    #[serde(with = "http_serde::header_map")]
+    headers:HeaderMap<HeaderValue>,
+    
+    encoding:String,
+    body:Option<String>
+}
+
+
+// #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+// pub struct ApiGatewayProxyRequest2 {
+//     /// The resource path defined in API Gateway
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     pub resource: Option<String>,
+//     /// The url path for the caller
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     pub path: Option<String>,
+//     #[serde(with = "http_method")]
+//     #[serde(rename = "httpMethod")]
+//     pub http_method: Method,
+//     #[serde(deserialize_with = "http_serde::header_map::deserialize")]
+//     #[serde(serialize_with = "serialize_headers")]
+//     pub headers: HeaderMap,
+//     #[serde(deserialize_with = "http_serde::header_map::deserialize")]
+//     #[serde(serialize_with = "serialize_multi_value_headers")]
+//     #[serde(rename = "multiValueHeaders")]
+//     pub multi_value_headers: HeaderMap,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "queryStringParameters")]
+//     pub query_string_parameters: HashMap<String, String>,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "multiValueQueryStringParameters")]
+//     pub multi_value_query_string_parameters: HashMap<String, Vec<String>>,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "pathParameters")]
+//     pub path_parameters: HashMap<String, String>,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "stageVariables")]
+//     pub stage_variables: HashMap<String, String>,
+//     #[serde(default)]
+//     #[serde(rename = "requestContext")]
+//     pub request_context: ApiGatewayProxyRequestContext,
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     pub body: Option<String>,
+//     #[serde(skip_serializing_if = "Option::is_none")]
+//     #[serde(rename = "isBase64Encoded")]
+//     pub is_base64_encoded: Option<bool>,
+// }
+
+
+// /// `ApiGatewayV2httpRequest` contains data coming from the new HTTP API Gateway
+// #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+// pub struct ApiGatewayV2httpRequest2 {
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     pub version: Option<String>,
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     #[serde(rename = "routeKey")]
+//     pub route_key: Option<String>,
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     #[serde(rename = "rawPath")]
+//     pub raw_path: Option<String>,
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     #[serde(rename = "rawQueryString")]
+//     pub raw_query_string: Option<String>,
+//     pub cookies: Option<Vec<String>>,
+//     #[serde(deserialize_with = "http_serde::header_map::deserialize")]
+//     #[serde(serialize_with = "serialize_headers")]
+//     pub headers: HeaderMap,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "queryStringParameters")]
+//     pub query_string_parameters: HashMap<String, String>,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "pathParameters")]
+//     pub path_parameters: HashMap<String, String>,
+//     #[serde(rename = "requestContext")]
+//     pub request_context: ApiGatewayV2httpRequestContext,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "stageVariables")]
+//     pub stage_variables: HashMap<String, String>,
+//     pub body: Option<String>,
+//     #[serde(rename = "isBase64Encoded")]
+//     pub is_base64_encoded: bool,
+// }
+
+
+// /// `AlbTargetGroupRequest` contains data originating from the ALB Lambda target group integration
+// #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+// pub struct AlbTargetGroupRequest2 {
+//     #[serde(with = "http_method")]
+//     #[serde(rename = "httpMethod")]
+//     pub http_method: Method,
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     pub path: Option<String>,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "queryStringParameters")]
+//     pub query_string_parameters: HashMap<String, String>,
+//     #[serde(deserialize_with = "deserialize_lambda_map")]
+//     #[serde(default)]
+//     #[serde(rename = "multiValueQueryStringParameters")]
+//     pub multi_value_query_string_parameters: HashMap<String, Vec<String>>,
+//     #[serde(deserialize_with = "http_serde::header_map::deserialize")]
+//     #[serde(serialize_with = "serialize_headers")]
+//     pub headers: HeaderMap,
+//     #[serde(deserialize_with = "http_serde::header_map::deserialize")]
+//     #[serde(serialize_with = "serialize_multi_value_headers")]
+//     #[serde(rename = "multiValueHeaders")]
+//     pub multi_value_headers: HeaderMap,
+//     #[serde(rename = "requestContext")]
+//     pub request_context: AlbTargetGroupRequestContext,
+//     #[serde(rename = "isBase64Encoded")]
+//     pub is_base64_encoded: bool,
+//     #[serde(deserialize_with = "deserialize_lambda_string")]
+//     #[serde(default)]
+//     pub body: Option<String>,
+// }
 
 impl LambdaRequest {
     /// Return the `RequestOrigin` of the request to determine where the `LambdaRequest`
@@ -40,6 +179,7 @@ impl LambdaRequest {
             LambdaRequest::ApiGatewayV1 { .. } => RequestOrigin::ApiGatewayV1,
             LambdaRequest::ApiGatewayV2 { .. } => RequestOrigin::ApiGatewayV2,
             LambdaRequest::Alb { .. } => RequestOrigin::Alb,
+            _ => RequestOrigin::ApiGatewayV2
         }
     }
 }
@@ -72,10 +212,63 @@ pub enum RequestContext {
 /// Converts LambdaRequest types into `http::Request<Body>` types
 impl<'a> From<LambdaRequest> for http::Request<Body> {
     fn from(value: LambdaRequest) -> Self {
+        println!("lambdarequest : {:#?}",value);
         match value {
             LambdaRequest::ApiGatewayV2(ag) => into_api_gateway_v2_request(ag),
             LambdaRequest::ApiGatewayV1(ag) => into_proxy_request(ag),
             LambdaRequest::Alb(alb) => into_alb_request(alb),
+            LambdaRequest::Unknown(fixreq) => {
+                let http_method = fixreq.method.clone();
+                let builder = http::Request::builder()
+                    .uri({
+                        let scheme = fixreq
+                            .headers
+                            .get(x_forwarded_proto())
+                            .and_then(|s| s.to_str().ok())
+                            .unwrap_or("https");
+                        let host = fixreq
+                            .headers
+                            .get(http::header::HOST)
+                            .and_then(|s| s.to_str().ok())
+                            // .or_else(|| ag.request_context.domain_name.as_deref())
+                            .unwrap_or("localhost");
+            
+                        let mut url = format!("{}://{}{}", scheme, host, fixreq.path.as_deref().unwrap_or_default());
+                        // if let Some(query) = ag.raw_query_string {
+                        //     url.push('?');
+                        //     url.push_str(&query);
+                        // }
+                        url
+                    })
+                    // .extension(QueryStringParameters(StrMap::from(ag.query_string_parameters)))
+                    // .extension(PathParameters(StrMap::from(ag.path_parameters)))
+                    // .extension(StageVariables(StrMap::from(ag.stage_variables)))
+                    // .extension(RequestContext::ApiGatewayV2(ag.request_context))
+                    ;
+            
+                let mut headers = fixreq.headers;
+                // if let Some(cookies) = ag.cookies {
+                //     if let Ok(header_value) = http::header::HeaderValue::from_str(&cookies.join(";")) {
+                //         headers.append(http::header::COOKIE, header_value);
+                //     }
+                // }
+            
+                let base64 = fixreq.encoding.contains("base64");
+            
+                let mut req = builder
+                    .body(
+                        fixreq.body
+                            .as_deref()
+                            .map_or_else(Body::default, |b| Body::from_maybe_encoded(base64, b)),
+                    )
+                    .expect("failed to build request");
+            
+                // no builder method that sets headers in batch
+                let _ = mem::replace(req.headers_mut(), headers);
+                let _ = mem::replace(req.method_mut(), http_method);
+            
+                req
+            }
         }
     }
 }
